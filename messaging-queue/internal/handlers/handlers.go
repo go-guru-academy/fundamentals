@@ -6,11 +6,12 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/go-guru-academy/fundamentals/messaging-queue/internal/handlers/hub"
 	"github.com/go-guru-academy/fundamentals/messaging-queue/internal/models"
 )
 
 func CreateMessage(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("message received")
+	fmt.Println("post: CreateMessage")
 
 	// Read the request body
 	body, err := ioutil.ReadAll(r.Body)
@@ -28,6 +29,15 @@ func CreateMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hub.Enqueue(body)
+
 	writeSuccess(w)
 
+}
+
+func GetMessage(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("get: GetMessage")
+	message := hub.Dequeue()
+	messageS := string(message)
+	writeJsonResponse(w, http.StatusOK, &messageS)
 }

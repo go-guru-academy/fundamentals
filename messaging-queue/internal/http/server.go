@@ -3,14 +3,31 @@ package http
 import (
 	"net/http"
 
-	"github.com/go-guru-academy/fundamentals/messaging-queue/internal/handlers"
+	"github.com/go-guru-academy/fundamentals/messaging-queue/internal/exitmanager"
+	"github.com/go-guru-academy/fundamentals/messaging-queue/internal/handlers/routes"
 )
 
-func Init() {
-	run()
+type Server struct {
+	_           struct{}
+	ExitManager *exitmanager.ExitManager
 }
 
-func run() {
-	http.HandleFunc("/message", handlers.CreateMessage)
-	http.ListenAndServe(":8888", nil)
+func Init(e *exitmanager.ExitManager) {
+	s := &Server{
+		ExitManager: e,
+	}
+	go s.run()
+}
+
+func (s *Server) run() {
+
+	// Create routes
+	r := routes.New()
+
+	// Listen and serve
+	if err := http.ListenAndServe(":8888", r); err != nil {
+		s.ExitManager.ServerError(err)
+		return
+	}
+
 }

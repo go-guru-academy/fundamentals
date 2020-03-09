@@ -40,11 +40,11 @@ func main() {
 	// Option 2: We receive data from the channel within the go routine and then
 	// send data to the channel after the go routine
 	go func() {
-		// Sending data into the channel
+		// Receiving data from the channel
 		fmt.Println(<-c1)
 	}()
 
-	// Receiving data from the channel
+	// Sending data into the channel
 	c1 <- "hello world"
 
 	// Sending data to and receiving data from a channel always uses the arrow

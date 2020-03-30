@@ -24,9 +24,9 @@ func main() {
 func setup(exitManager *exitmanager.ExitManager) {
 
 	// Init hub
-	hub.Init()
+	h := hub.Init()
 
 	// Init HTTP server
-	http.Init(exitManager)
+	http.Init(exitManager, h)
 
 }

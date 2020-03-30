@@ -10,34 +10,53 @@ import (
 	"github.com/go-guru-academy/fundamentals/messaging-queue/internal/models"
 )
 
-func CreateMessage(w http.ResponseWriter, r *http.Request) {
+type Handler struct {
+	ResponseWriter http.ResponseWriter
+	Request        *http.Request
+	Hub            *hub.Hub
+}
+
+func CreateMessage(h *Handler) {
 	fmt.Println("post: CreateMessage")
 
 	// Read the request body
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(h.Request.Body)
 	if err != nil {
-		writeServerError(w, err)
+		h.writeServerError(err)
 		return
 	}
 
 	// Validate that the body is valid JSON
 	if err := json.Unmarshal(body, &models.Message{}); err != nil {
-		writeJsonResponse(w, http.StatusBadRequest, &SimpleResponse{
+		h.writeJsonResponse(http.StatusBadRequest, &SimpleResponse{
 			Code:    http.StatusBadRequest,
 			Message: "Invalid Message Format. Must be valid JSON.",
 		})
 		return
 	}
 
-	hub.Enqueue(body)
+	if err := h.Hub.Enqueue(body); err != nil {
+		h.writeJsonResponse(http.StatusTooManyRequests, &SimpleResponse{
+			Code:    http.StatusTooManyRequests,
+			Message: "Message Limit Exceeded.",
+		})
+		return
+	}
 
-	writeSuccess(w)
+	h.writeSuccess()
 
 }
 
-func GetMessage(w http.ResponseWriter, r *http.Request) {
+func GetMessage(h *Handler) {
 	fmt.Println("get: GetMessage")
-	message := hub.Dequeue()
+	message, err := h.Hub.Dequeue()
+	if err != nil {
+		h.writeJsonResponse(http.StatusOK, &SimpleResponse{
+			Code:    http.StatusOK,
+			Message: "No messages in queue.",
+		})
+		return
+	}
 	messageS := string(message)
-	writeJsonResponse(w, http.StatusOK, &messageS)
+	h.writeJsonResponse(http.StatusOK, &messageS)
 }

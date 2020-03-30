@@ -15,31 +15,31 @@ type SimpleResponse struct {
 	Message string `json:"message"`
 }
 
-func writeSuccess(w http.ResponseWriter) {
-	writeJsonResponse(w, 200, &SimpleResponse{
+func (h *Handler) writeSuccess() {
+	h.writeJsonResponse(200, &SimpleResponse{
 		Code:    http.StatusOK,
 		Message: SUCCESS,
 	})
 }
 
-func writeJsonResponse(w http.ResponseWriter, status int, data interface{}) {
+func (h *Handler) writeJsonResponse(status int, data interface{}) {
 	j, err := json.Marshal(data)
 	if err != nil {
-		writeServerError(w, err)
+		h.writeServerError(err)
 		return
 	}
-	w.WriteHeader(status)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(j)
+	h.ResponseWriter.WriteHeader(status)
+	h.ResponseWriter.Header().Set("Content-Type", "application/json")
+	h.ResponseWriter.Write(j)
 }
 
-func writeServerError(w http.ResponseWriter, err error) {
+func (h *Handler) writeServerError(err error) {
 	fmt.Println(err)
 	j, _ := json.Marshal(&SimpleResponse{
 		Code:    http.StatusInternalServerError,
 		Message: "Internal Server Error",
 	})
-	w.WriteHeader(http.StatusInternalServerError)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(j)
+	h.ResponseWriter.WriteHeader(http.StatusInternalServerError)
+	h.ResponseWriter.Header().Set("Content-Type", "application/json")
+	h.ResponseWriter.Write(j)
 }
